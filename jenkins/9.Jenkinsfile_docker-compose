@@ -1,0 +1,44 @@
+pipeline {
+    agent any
+    environment {
+        CONFIG_NAME = "Development"
+        PROJECT_NAME = "dotnet8-api"
+        IMAGE_NAME = "${PROJECT_NAME}:latest"
+
+        YAML_PATH = "./dotnet8-api/docker/docker-compose.yml"
+    }
+    stages {
+        stage ('Clean workspace') {
+            steps {
+                cleanWs()
+            }
+        }
+        stage("Git Checkout") {
+            steps {
+                echo "Git Checkout..."
+                git(
+                    url: "https://github.com/shobariabay/sample-dotnet8.git",
+                    branch: "main",
+                    credentialsId: "github-cred"
+                )
+            }
+        }
+        stage("Docker Dompose") {
+            steps {
+                sh "sed -i 's/<<image_name>>/${IMAGE_NAME}/g' ${YAML_PATH}"
+                sh "sed -i 's/<<config_name>>/${CONFIG_NAME}/g' ${YAML_PATH}"
+                sh "cat ${YAML_PATH}"
+                
+                sh "docker compose -f ${YAML_PATH} up -d"
+            }
+        }
+    }
+    post {
+        always {
+            slackSend (
+                channel: '#belajar',  //change your channel name
+                message: "*${currentBuild.currentResult}:* Job ${env.JOB_NAME} \n build ${env.BUILD_NUMBER} \n More info at: ${env.BUILD_URL}"
+            )
+        }
+    }
+}

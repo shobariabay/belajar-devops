@@ -1,0 +1,68 @@
+pipeline {
+    agent any
+    environment {
+        PROJECT_NAME = "dotnet8-api"
+
+        IMAGE_REGISTRY = 'docker.io/shobariabay'
+        IMAGE_VERSION = "1.00"
+        IMAGE_NAME = "${IMAGE_REGISTRY}/${PROJECT_NAME}:${IMAGE_VERSION}"
+        IMAGE_LATEST = "${IMAGE_REGISTRY}/${PROJECT_NAME}:latest"
+
+        DOCKERFILE_PATH = "./dotnet8-api/docker/Dockerfile"
+    }
+    stages {
+        stage ('Clean workspace') {
+            steps {
+                cleanWs()
+            }
+        }
+        stage("Git Checkout") {
+            steps {
+                echo "Git Checkout..."
+                git(
+                    url: "https://github.com/shobariabay/sample-dotnet8.git",
+                    branch: "main",
+                    credentialsId: "github-cred"
+                )
+            }
+        }
+        stage('Build Docker Image') {
+            steps {
+                sh "docker build -t ${IMAGE_NAME} -f ${DOCKERFILE_PATH} ."
+            }
+        }
+        stage('Login to docker hub') {
+            environment {
+                DOCKERHUB_CREDENTIALS = credentials('docker-hub')
+            }
+			steps {
+				sh('echo $DOCKERHUB_CREDENTIALS_PSW | docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin')
+			}
+		}
+        stage("Push to Docker Hub"){
+            steps{
+                sh "docker tag ${IMAGE_NAME} ${IMAGE_LATEST}"
+                sh "docker push ${IMAGE_NAME}"
+                sh "docker push ${IMAGE_LATEST}"
+            }
+        }
+        stage("Log out of docker hub") {
+            steps {
+                sh "docker logout"
+            }
+        }
+        stage ("Prune Docker Images"){
+            steps{
+                sh "docker image prune --force --all"
+            }
+        }
+    }
+    post {
+        always {
+            slackSend (
+                channel: '#belajar',  //change your channel name
+                message: "*${currentBuild.currentResult}:* Job ${env.JOB_NAME} \n build ${env.BUILD_NUMBER} \n More info at: ${env.BUILD_URL}"
+            )
+        }
+    }
+}

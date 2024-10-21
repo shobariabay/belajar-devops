@@ -1,0 +1,17 @@
+node {
+  try {
+    stage('Example') {
+      echo "Failure"
+      sh 'exit 1'
+    }
+    stage('Test') {
+        echo 'ok.'
+    }
+  }
+  catch (Exception e) {
+      echo 'Something failed!'
+  }
+  finally {
+      echo 'finish..'
+  }
+}

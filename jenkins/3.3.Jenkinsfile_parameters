@@ -1,0 +1,14 @@
+pipeline {
+    agent any
+    parameters {
+        string(name: 'TEST_PARAM', defaultValue: 'TEST PARAM', description: 'TEST PARAM')
+    }
+    stages {
+        stage('Example') {
+            steps {
+                echo "TEST_PARAM : ${TEST_PARAM}"
+                echo "TEST_PARAM : ${params.TEST_PARAM}"
+            }
+        }
+    }
+}

@@ -1,0 +1,27 @@
+def COLOR_MAP = [
+    'FAILURE' : 'danger',
+    'SUCCESS' : 'good'
+]
+pipeline {
+  agent any
+  stages {
+      stage("Clone Git Repository") {
+          steps {
+              git(
+                  url: "https://github.com/shobariabay/sample-dotnet8.git",
+                  branch: "main",
+                  credentialsId: "github-cred"
+              )
+          }
+      }
+  }
+  post {
+    always {
+        slackSend (
+            channel: '#belajar',  //change your channel name
+            color: COLOR_MAP[currentBuild.currentResult],
+            message: "*${currentBuild.currentResult}:* Job ${env.JOB_NAME} \n build ${env.BUILD_NUMBER} \n More info at: ${env.BUILD_URL}"
+        )
+    }
+  }
+}

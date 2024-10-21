@@ -1,0 +1,14 @@
+pipeline {
+    agent any
+    stages {
+        stage("Clone Git Repository") {
+            steps {
+                git(
+                    url: "https://github.com/shobariabay/sample-dotnet8.git",
+                    branch: "main",
+                    credentialsId: "github-cred"
+                )
+            }
+        }
+    }
+}

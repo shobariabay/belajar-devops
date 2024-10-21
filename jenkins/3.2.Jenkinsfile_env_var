@@ -1,0 +1,14 @@
+pipeline {
+    agent any
+    environment {
+        VAR_COBA = "test environment"
+    }
+    stages {
+        stage('Example') {
+            steps {
+                echo "VAR_COBA : ${VAR_COBA}"
+                echo "VAR_COBA : ${env.VAR_COBA}"
+            }
+        }
+    }
+}
